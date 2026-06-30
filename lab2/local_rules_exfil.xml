@@ -30,7 +30,7 @@
       - 9 digitos comenzando en 5-9 (500M - 999M)
       - 10 o mas digitos (1 GB en adelante)
   -->
-  <rule id="100011" level="14" timeframe="3600" frequency="1">
+  <rule id="100011" level="14" timeframe="3600">
     <if_matched_sid>100010</if_matched_sid>
     <same_source_ip />
     <field name="data.bytes_sent">^([5-9][0-9]{8}|[1-9][0-9]{9,})$</field>
