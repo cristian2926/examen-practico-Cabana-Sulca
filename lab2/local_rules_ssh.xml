@@ -1,0 +1,17 @@
+<group name="local,ssh,">
+
+  <!--
+    Regla 100001: Deteccion de ataque de fuerza bruta SSH
+    - Se activa cuando la regla base 5716 (Failed password for sshd) se dispara
+      10 o mas veces en 60 segundos desde la misma IP de origen.
+    - Nivel 10 = alta severidad.
+    - Grupos: authentication_failures, brute_force.
+  -->
+  <rule id="100001" level="10" frequency="10" timeframe="60">
+    <if_matched_sid>5716</if_matched_sid>
+    <same_source_ip />
+    <description>Ataque de fuerza bruta SSH detectado desde $(srcip)</description>
+    <group>authentication_failures,brute_force</group>
+  </rule>
+
+</group>

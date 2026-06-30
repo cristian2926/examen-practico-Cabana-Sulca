@@ -1,0 +1,41 @@
+<group name="local,exfiltration,">
+
+  <!--
+    LOGICA DE LA REGLA COMPUESTA:
+    Paso 1 (regla 100010): Detecta un login SSH exitoso fuera del horario laboral
+    (entre las 22:00 y las 06:00). Se basa en la regla nativa 5715 de Wazuh
+    (Accepted password/publickey para sshd). El rango horario se evalua con
+    el campo <time> de Wazuh.
+
+    Paso 2 (regla 100011): Correlaciona con una transferencia de datos saliente
+    superior a 500 MB (524288000 bytes) desde la misma IP de origen, dentro
+    de una ventana de 1 hora (3600 segundos) tras el login detectado.
+    Requiere que el decoder de firewall/red extraiga el campo data.bytes_sent
+    de los logs del firewall (iptables, pf, Cisco ASA, etc.).
+    Nivel 14 = critico.
+  -->
+
+  <!-- Paso 1: Login SSH exitoso fuera de horario laboral (22:00 - 06:00) -->
+  <rule id="100010" level="5">
+    <if_sid>5715</if_sid>
+    <time>22:00 - 06:00</time>
+    <description>Login SSH exitoso fuera de horario laboral desde $(srcip)</description>
+    <group>after_hours_login</group>
+  </rule>
+
+  <!--
+    Paso 2: Transferencia saliente > 500 MB correlacionada con login fuera de horario.
+    El campo data.bytes_sent debe ser provisto por el decoder del firewall.
+    El patron regex valida valores >= 500000000 bytes (500 MB):
+      - 9 digitos comenzando en 5-9 (500M - 999M)
+      - 10 o mas digitos (1 GB en adelante)
+  -->
+  <rule id="100011" level="14" timeframe="3600" frequency="1">
+    <if_matched_sid>100010</if_matched_sid>
+    <same_source_ip />
+    <field name="data.bytes_sent">^([5-9][0-9]{8}|[1-9][0-9]{9,})$</field>
+    <description>CRITICO: Posible exfiltracion de datos - transferencia mayor a 500 MB desde $(srcip) tras login fuera de horario laboral</description>
+    <group>data_exfiltration,critical</group>
+  </rule>
+
+</group>
