@@ -30,10 +30,16 @@
       - 9 digitos comenzando en 5-9 (500M - 999M)
       - 10 o mas digitos (1 GB en adelante)
   -->
+  <!--
+    Paso 2: Detecta transferencia saliente > 500 MB en el mensaje del log
+    (patron regex sobre bytes enviados >= 500000000).
+    Se correlaciona con el login fuera de horario (regla 100010)
+    desde la misma IP dentro de una ventana de 3600 segundos.
+  -->
   <rule id="100011" level="14" timeframe="3600">
     <if_matched_sid>100010</if_matched_sid>
     <same_source_ip />
-    <field name="data.bytes_sent">^([5-9][0-9]{8}|[1-9][0-9]{9,})$</field>
+    <match>bytes=[5-9][0-9]{8}|bytes=[1-9][0-9]{9,}</match>
     <description>CRITICO: Posible exfiltracion de datos - transferencia mayor a 500 MB desde $(srcip) tras login fuera de horario laboral</description>
     <group>data_exfiltration,critical</group>
   </rule>
